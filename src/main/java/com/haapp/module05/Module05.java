@@ -1,59 +1,61 @@
 package com.haapp.module05;
 
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class Module05 {
 
     private static final String OPEN_BRACKETS = "({[<";
+    private static final String ALL_BRACKETS = "({[<)}]>";
     private static final String CLOSE_BRACKETS = ")}]>";
+
     private static final String SEPARATOR_LINE = "------------------------------------------------------------------";
+    private static List<Character> inCome;
 
     public static void main(String[] args) {
         try (Scanner in = new Scanner(System.in)) {
             separate();
             System.out.println("Please, type a string with some brackets and press ENTER:");
             String inComeLineFromConsole = in.nextLine();
-            if(checkBracket(inComeLineFromConsole)){
+            if (checkBracket(inComeLineFromConsole)) {
                 System.out.println("INFO: The brackets are placed correctly in your string: " + inComeLineFromConsole);
+            }else{
+                throw new BracketException("The brackets are wrong");
             }
             separate();
-        } catch (BracketException ex){
+        } catch (BracketException ex) {
             System.out.println(ex.getMessage());
         }
     }
 
-    private static void separate (){
+    private static void separate() {
         System.out.println(SEPARATOR_LINE);
     }
 
     private static boolean checkBracket(String inComeLineFromConsole) throws BracketException {
 
-        char[] inCome = inComeLineFromConsole.toCharArray();
+        inCome = inComeLineFromConsole.chars().mapToObj(c -> (char) c).collect(Collectors.toList());
+
         Stack<Character> bracketStack = new Stack<Character>();
-        Stack<Integer> positionStack = new Stack<Integer>();
 
-        int position = 0;
+        AtomicBoolean result = new AtomicBoolean(true);
 
-        for (Character character:inCome) {
-            position++;
-            if (OPEN_BRACKETS.contains(character.toString())){
-                bracketStack.push(character);
-                positionStack.push(position);
-            }
-            if (CLOSE_BRACKETS.contains(character.toString())){
-                if (bracketStack.isEmpty()){
-                    throw new BracketException("Unexpected bracket '" + character + "' in position " + position);
+        inCome.stream().peek(i -> {
+                        if (OPEN_BRACKETS.contains(i.toString())) {
+                            bracketStack.push(i);
+                        }
+                        if (CLOSE_BRACKETS.contains(i.toString())) {
+                            if (bracketStack.isEmpty() || (i - bracketStack.pop()) > 2) {
+                                result.set(false);
+                            }
+                        }
                 }
-                if ((character - bracketStack.pop()) > 2){
-                    throw new BracketException("Unexpected bracket '" + character + "' in position " + position);
-                };
-                positionStack.pop();
-            }
-        }
+                ).collect(Collectors.toList());
+
         if (!bracketStack.isEmpty()){
-            throw new BracketException("Not closes bracket '" + bracketStack.pop() + "' in position " + positionStack.pop());
+            result.set(false);
         }
-        return true;
+        return result.get();
     }
 }
