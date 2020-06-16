@@ -45,6 +45,7 @@ public class Module05 {
                         if (OPEN_BRACKETS.contains(i.toString())) {
                             bracketStack.push(i);
                         }
+
                         if (CLOSE_BRACKETS.contains(i.toString())) {
                             if (bracketStack.isEmpty() || (i - bracketStack.pop()) > 2) {
                                 result.set(false);
